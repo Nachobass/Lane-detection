@@ -1,3 +1,4 @@
+
 #region Includes
 using System;
 using System.Net;
@@ -21,7 +22,7 @@ public class RLBridgeServer : MonoBehaviour
     private int port = 5555;
 
     [SerializeField]
-    private CarController controlledCar; // asignar desde Inspector o buscar en escena
+    private CarController controlledCar; // assign from Inspector or find in scene
 
     [SerializeField]
     private CarController carPrefab;
@@ -45,25 +46,22 @@ public class RLBridgeServer : MonoBehaviour
     private float prevCompletion = 0f;
     private float episodeReward = 0f;
 
-    // Flags para reset seguro en main thread
-    private volatile bool resetRequested = false;
-
     #endregion
 
     #region Unity Methods
 
     void Awake()
     {
-        // 1. Usar el auto asignado en el Inspector
+        // 1. Use the car assigned in the Inspector
         if (controlledCar == null)
         {
-            // 2. Instanciar prefab si está asignado
+            // 2. Instantiate prefab if assigned
             if (carPrefab != null)
             {
                 controlledCar = Instantiate(carPrefab);
-                controlledCar.name = carPrefab.name; // opcional
+                controlledCar.name = carPrefab.name;
             }
-            // 3. Buscar cualquier CarController en la escena
+            // 3. Find any CarController in the scene
             else
             {
                 controlledCar = FindObjectOfType<CarController>();
@@ -79,14 +77,14 @@ public class RLBridgeServer : MonoBehaviour
             }
         }
 
-        // Configurar control externo
+        // Configure external control
         controlledCar.UseUserInput = false;
         controlledCar.UseExternalControl = true;
 
-        // Obtener sensores
+        // Get sensors
         sensors = controlledCar.GetComponentsInChildren<Sensor>();
+        Debug.Log($"RLBridgeServer: Found {sensors.Length} sensors");
     }
-
 
     void Start()
     {
@@ -98,11 +96,127 @@ public class RLBridgeServer : MonoBehaviour
         StopServer();
     }
 
+    // void FixedUpdate()
+    // {
+    //     // Debug: Log every 60 frames to see if FixedUpdate is running
+    //     if (Time.frameCount % 60 == 0)
+    //     {
+    //         // Debug.Log($"RLBridgeServer: FixedUpdate running (frame {Time.frameCount})");
+    //     }
+
+    //     if (controlledCar == null) 
+    //     {
+    //         // Debug.LogWarning("RLBridgeServer: FixedUpdate - controlledCar is null");
+    //         return;
+    //     }
+
+    //     // Debug: Check if reset is requested
+    //     if (resetRequestedEvent.WaitOne(0))
+    //     {
+    //         // Debug.Log("RLBridgeServer: FixedUpdate processing reset");
+    //     }
+
+    //     // Process step action if requested
+    //     if (stepRequested.WaitOne(0))
+    //     {
+    //         double turn = 0, throttle = 0;
+    //         if (pendingAction != null && pendingAction.Length >= 2)
+    //         {
+    //             turn = Mathf.Clamp((float)pendingAction[0], -1f, 1f);
+    //             throttle = Mathf.Clamp((float)pendingAction[1], -1f, 1f);
+    //         }
+
+    //         controlledCar.Movement.SetInputs(new double[] { turn, throttle });
+
+    //         float[] obs = BuildObservation();
+    //         float completion = controlledCar.CurrentCompletionReward;
+    //         float reward = completion - prevCompletion;
+    //         prevCompletion = completion;
+    //         bool done = !controlledCar.enabled;
+
+    //         stepResponseJson = BuildResponseJson(obs, reward, done);
+    //         episodeReward += reward;
+
+    //         stepCompleted.Set();
+    //     }
+
+    //     // Process reset if requested
+    //     if (resetRequestedEvent.WaitOne(0))
+    //     {
+    //         Debug.Log("RLBridgeServer: FixedUpdate processing reset");
+
+    //         if (controlledCar != null)
+    //         {
+    //             Debug.Log("RLBridgeServer: Resetting car position and rotation");
+    //             controlledCar.transform.position = Vector3.zero;
+    //             controlledCar.transform.rotation = Quaternion.identity;
+                
+    //             // Try to restart the car, but don't fail if the method doesn't exist
+    //             try
+    //             {
+    //             controlledCar.Restart();
+    //                 Debug.Log("RLBridgeServer: Car.Restart() called successfully");
+    //             }
+    //             catch (Exception ex)
+    //             {
+    //                 Debug.LogWarning($"RLBridgeServer: Car.Restart() failed: {ex.Message}");
+    //             }
+    //         }
+    //         else
+    //         {
+    //             Debug.LogError("RLBridgeServer: controlledCar is null during reset!");
+    //         }
+
+    //         prevCompletion = 0f;
+    //         episodeReward = 0f;
+
+    //         Debug.Log("RLBridgeServer: Building observation after reset");
+    //         float[] obs = BuildObservation();
+    //         resetResponseJson = BuildResponseJson(obs, 0f, false);
+
+    //         Debug.Log("RLBridgeServer: Setting reset completed event");
+    //         // Notify that reset is complete
+    //         resetCompleted.Set();
+    //         Debug.Log("RLBridgeServer: Reset completed successfully");
+    //     }
+    // }
+
     void FixedUpdate()
     {
         if (controlledCar == null) return;
 
-        // --- Procesar acción si fue solicitada ---
+        // Procesar reset si se solicitó
+        if (resetRequestedEvent.WaitOne(0))
+        {
+            Debug.Log("RLBridgeServer: FixedUpdate processing reset");
+
+            if (controlledCar != null)
+            {
+                controlledCar.transform.position = Vector3.zero;
+                controlledCar.transform.rotation = Quaternion.identity;
+
+                try
+                {
+                    controlledCar.Restart();
+                    Debug.Log("RLBridgeServer: Car.Restart() called successfully");
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"RLBridgeServer: Car.Restart() failed: {ex.Message}");
+                }
+            }
+
+            prevCompletion = 0f;
+            episodeReward = 0f;
+
+            float[] obs = BuildObservation();
+            resetResponseJson = BuildResponseJson(obs, 0f, false);
+            resetCompleted.Set();
+
+            Debug.Log("RLBridgeServer: Reset completed successfully");
+        }
+
+        // Procesar paso si se solicitó
         if (stepRequested.WaitOne(0))
         {
             double turn = 0, throttle = 0;
@@ -115,7 +229,6 @@ public class RLBridgeServer : MonoBehaviour
             controlledCar.Movement.SetInputs(new double[] { turn, throttle });
 
             float[] obs = BuildObservation();
-
             float completion = controlledCar.CurrentCompletionReward;
             float reward = completion - prevCompletion;
             prevCompletion = completion;
@@ -123,70 +236,11 @@ public class RLBridgeServer : MonoBehaviour
 
             stepResponseJson = BuildResponseJson(obs, reward, done);
             episodeReward += reward;
-
             stepCompleted.Set();
         }
-
-        // --- Procesar reset si fue solicitado ---
-        if (resetRequested)
-        {
-            resetRequested = false;
-
-            if (controlledCar != null)
-            {
-                controlledCar.transform.position = Vector3.zero;
-                controlledCar.transform.rotation = Quaternion.identity;
-                controlledCar.Restart();
-            }
-
-            prevCompletion = 0f;
-            episodeReward = 0f;
-
-            float[] obs = BuildObservation();
-            resetResponseJson = BuildResponseJson(obs, 0f, false);
-
-            // Señalizamos al hilo del servidor que terminó el reset
-            stepCompleted.Set();
-        }
-        // Procesar reset si fue solicitado
-        // if (resetRequestedEvent.WaitOne(0))
-        // {
-        //     if (controlledCar != null)
-        //     {
-        //         controlledCar.transform.position = Vector3.zero;
-        //         controlledCar.transform.rotation = Quaternion.identity;
-        //         controlledCar.Restart();
-        //     }
-
-        //     prevCompletion = 0f;
-        //     episodeReward = 0f;
-
-        //     float[] obs = BuildObservation();
-        //     resetResponseJson = BuildResponseJson(obs, 0f, false);
-
-        //     // Señalizamos al hilo del servidor que terminó el reset
-        //     stepCompleted.Set();
-        // }
-        if (resetRequestedEvent.WaitOne(0))
-        {
-            if (controlledCar != null)
-            {
-                controlledCar.transform.position = Vector3.zero;
-                controlledCar.transform.rotation = Quaternion.identity;
-                controlledCar.Restart();
-            }
-
-            prevCompletion = 0f;
-            episodeReward = 0f;
-
-            float[] obs = BuildObservation();
-            resetResponseJson = BuildResponseJson(obs, 0f, false);
-
-            // notificar que el reset terminó
-            resetCompleted.Set();
-        }
-
     }
+
+
     #endregion
 
     #region Server Methods
@@ -223,68 +277,57 @@ public class RLBridgeServer : MonoBehaviour
                     var reader = new System.IO.StreamReader(stream, Encoding.UTF8);
                     var writer = new System.IO.StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
 
+                    Debug.Log("RLBridgeServer: Client connected");
+
                     while (running && client.Connected)
                     {
                         string line = reader.ReadLine();
                         if (line == null) break;
 
+                        Debug.Log($"RLBridgeServer: Received command: {line}");
+
                         var cmd = ParseCommand(line);
                         if (cmd == null)
                         {
+                            Debug.LogError($"RLBridgeServer: Failed to parse command: {line}");
                             writer.WriteLine("{\"error\":\"bad_json\"}");
                             continue;
                         }
 
-                        // if (cmd.Name == "reset")
-                        // {
-                        //     // Solo pedimos que se haga reset, no ejecutamos transform desde el thread
-                        //     resetRequested = true;
-                        //     int waited = 0;
-                        //     int waitMs = 5000;
-                        //     while (resetResponseJson == null && waited < waitMs)
-                        //     {
-                        //         Thread.Sleep(50);
-                        //         waited += 50;
-                        //     }
-                        //     string resp = resetResponseJson ?? "{\"error\":\"timeout\"}";
-                        //     resetResponseJson = null;
-                        //     writer.WriteLine(resp);
-                        // }
-                        // if (cmd.Name == "reset")
-                        // {
-                        //     resetResponseJson = null;
-                        //     resetRequestedEvent.Set();             // señal para FixedUpdate
-                        //     stepCompleted.WaitOne(5000);           // espera que termine
-                        //     string resp = resetResponseJson ?? "{\"error\":\"timeout\"}";
-                        //     resetResponseJson = null;
-                        //     writer.WriteLine(resp);
-                        // }
                         if (cmd.Name == "reset")
                         {
+                            Debug.Log("RLBridgeServer: Processing reset command");
                             resetResponseJson = null;
-                            resetRequestedEvent.Set();            // disparar reset
-                            resetCompleted.WaitOne(5000);         // esperar que termine
+                            Debug.Log("RLBridgeServer: Setting resetRequestedEvent");
+                            resetRequestedEvent.Set();            // trigger reset
+                            Debug.Log("RLBridgeServer: Waiting for reset completion...");
+                            bool completed = resetCompleted.WaitOne(5000);         // wait for completion
+                            Debug.Log($"RLBridgeServer: Reset completed: {completed}");
                             string resp = resetResponseJson ?? "{\"error\":\"timeout\"}";
                             resetResponseJson = null;
                             writer.WriteLine(resp);
+                            Debug.Log($"RLBridgeServer: Reset response: {resp}");
                         }
-
                         else if (cmd.Name == "step")
                         {
+                            Debug.Log($"RLBridgeServer: Processing step command: [{cmd.Action[0]}, {cmd.Action[1]}]");
                             pendingAction = cmd.Action;
                             stepRequested.Set();
                             stepCompleted.WaitOne(5000);
                             string resp = stepResponseJson ?? "{\"error\":\"timeout\"}";
                             stepResponseJson = null;
                             writer.WriteLine(resp);
+                            Debug.Log($"RLBridgeServer: Step response: {resp}");
                         }
                         else if (cmd.Name == "close")
                         {
+                            Debug.Log("RLBridgeServer: Client requested close");
                             writer.WriteLine("{\"ok\":true}");
                             break;
                         }
                         else
                         {
+                            Debug.LogError($"RLBridgeServer: Unknown command: {cmd.Name}");
                             writer.WriteLine("{\"error\":\"unknown_cmd\"}");
                         }
                     }
@@ -306,7 +349,7 @@ public class RLBridgeServer : MonoBehaviour
     private float[] BuildObservation()
     {
         if (sensors == null) sensors = controlledCar.GetComponentsInChildren<Sensor>();
-        float[] obs = new float[sensors.Length + 1]; // sensores + velocidad
+        float[] obs = new float[sensors.Length + 1]; // sensors + velocity
         for (int i = 0; i < sensors.Length; i++)
             obs[i] = sensors[i].Output;
         obs[sensors.Length] = controlledCar.Movement.Velocity;
