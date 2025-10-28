@@ -8,12 +8,24 @@ Short demo video of an early version: https://youtu.be/rEDzUT3ymw4
 
 # How to use the Unity project
 
-First of all install Unity Hub and install the latest version of Unity. Then, open the project at `UnityProject`. 
+<!-- First of all install Unity Hub and install the latest version of Unity. Then, open the project at `UnityProject`. 
 Then in Unity Editor, open the project assets folder and open the `Main` folder. There you need to 'Create empty' call `RLBridge` and in the inspector assign the `RLBridgeServer` MonoBehaviour.
 
 Press Play; the Console should show `RLBridgeServer listening on 127.0.0.1:5555`.
 
-After that, you can go to the `python` folder and open the notebook `ppo_experiments.ipynb` to train the PPO agent. The notebook will connect to the Unity project and train the PPO agent. "Now we are having time out errors, but we are working on it."
+After that, you can go to the `python` folder and open the notebook `ppo_experiments.ipynb` to train the PPO agent. The notebook will connect to the Unity project and train the PPO agent. "Now we are having time out errors, but we are working on it." -->
+1) Install Unity Hub and make sure you have the latest version of Unity installed.
+2) Open the project located in the `UnityProject` folder from Unity Hub.
+3) In the Unity Editor, navigate to the `Assets/Main` folder.
+4) Right-click inside the Hierarchy and select “Create Empty”. Name the new GameObject **RLBridge**.
+5) With RLBridge selected, go to the Inspector and add the **RLBridgeServer** MonoBehaviour component (from your Scripts/Simulation folder).
+6) Press Play. In the Console, you should see the message: `RLBridgeServer listening on 127.0.0.1:5555`.
+7) Then, go to the python folder and open the notebook `ppo_experiments.ipynb`.
+
+This notebook connects to the Unity environment and trains the PPO agent through the TCP bridge.
+
+Note: We are currently working on resolving timeout errors during the reset phase, but we are working on it.
+
 
 
 
