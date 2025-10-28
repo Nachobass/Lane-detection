@@ -1,0 +1,10 @@
+gymnasium==0.29.1
+stable-baselines3==2.3.0
+numpy>=1.23
+jupyter
+matplotlib
+torch>=2.0; platform_system != 'Darwin' or platform_machine != 'arm64'
+torch==2.4.0; platform_system == 'Darwin' and platform_machine == 'arm64'
+
+
+

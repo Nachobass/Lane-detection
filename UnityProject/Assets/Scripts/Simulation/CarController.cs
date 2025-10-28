@@ -1,4 +1,4 @@
-﻿/// Author: Samuel Arzt
+/// Author: Samuel Arzt
 /// Date: March 2017
 
 #region Includes
@@ -46,6 +46,12 @@ public class CarController : MonoBehaviour
     /// Whether this car is controllable by user input (keyboard).
     /// </summary>
     public bool UseUserInput = false;
+
+    /// <summary>
+    /// Whether this car's controls are provided by an external controller (e.g., TCP bridge).
+    /// When true, this component will not fetch actions from the internal Agent.
+    /// </summary>
+    public bool UseExternalControl = false;
 
     /// <summary>
     /// The movement component of this car.
@@ -120,8 +126,10 @@ public class CarController : MonoBehaviour
     void FixedUpdate()
     {
         //Get control inputs from Agent
-        if (!UseUserInput)
+        if (!UseUserInput && !UseExternalControl)
         {
+            if (Agent == null || Agent.FNN == null)
+                return; // Defensive: skip until Agent is assigned
             //Get readings from sensors
             double[] sensorOutput = new double[sensors.Length];
             for (int i = 0; i < sensors.Length; i++)
@@ -156,3 +164,5 @@ public class CarController : MonoBehaviour
     }
     #endregion
 }
+
+
