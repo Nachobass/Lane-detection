@@ -1,10 +1,23 @@
-# Applying Evolutionary Artificial Neural Networks
+<!-- # Applying Evolutionary Artificial Neural Networks
 
 A 2D Unity simulation in which cars learn to navigate themselves through different courses. The cars are steered by a feedforward Neural Network. The weights of the network are trained using a modified genetic algorithm.
 Short demo video of an early version: https://youtu.be/rEDzUT3ymw4
 
 
-![](Images/Demo.gif)
+![](Images/Demo.gif) -->
+
+# How to use the Unity project
+
+First of all install Unity Hub and install the latest version of Unity. Then, open the project at `UnityProject`. 
+Then in Unity Editor, open the project assets folder and open the `Main` folder. There you need to 'Create empty' call `RLBridge` and in the inspector assign the `RLBridgeServer` MonoBehaviour.
+
+Press Play; the Console should show `RLBridgeServer listening on 127.0.0.1:5555`.
+
+After that, you can go to the `python` folder and open the notebook `ppo_experiments.ipynb` to train the PPO agent. The notebook will connect to the Unity project and train the PPO agent. "Now we are having time out errors, but we are working on it."
+
+
+
+
 
 
 ## The Simulation
