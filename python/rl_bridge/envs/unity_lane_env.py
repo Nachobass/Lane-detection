@@ -18,7 +18,7 @@ class UnityLaneEnv(gym.Env):
 
     metadata = {"render_modes": []}
 
-    def __init__(self, host: str = "127.0.0.1", port: int = 5555, frame_skip: int = 1, timeout_s: float = 5.0):
+    def __init__(self, host: str = "127.0.0.1", port: int = 5555, frame_skip: int = 1, timeout_s: float = 50000.0):
         super().__init__()
         self.host = host
         self.port = port
@@ -38,7 +38,10 @@ class UnityLaneEnv(gym.Env):
     def _connect(self):
         if self._sock is not None:
             return
+
+        print(f"Connecting to {self.host}:{self.port}")
         self._sock = socket.create_connection((self.host, self.port), timeout=self.timeout_s)
+        
         self._file_r = self._sock.makefile(mode="r", encoding="utf-8", buffering=1, newline="\n")
         self._file_w = self._sock.makefile(mode="w", encoding="utf-8", buffering=1, newline="\n")
 
@@ -46,6 +49,7 @@ class UnityLaneEnv(gym.Env):
         assert self._file_w is not None
         line = json.dumps(obj, separators=(",", ":"))
         self._file_w.write(line + "\n")
+        
         self._file_w.flush()
         resp = self._file_r.readline()
         if not resp:
@@ -104,9 +108,18 @@ class UnityLaneEnv(gym.Env):
                 self._file_w = None
 
 
-def make_env(host: str = "127.0.0.1", port: int = 5555, frame_skip: int = 1):
-    return UnityLaneEnv(host=host, port=port, frame_skip=frame_skip)
+"""def make_env(host: str = "127.0.0.1", port: int = 5555, frame_skip: int = 1):
+    import time
+    env= UnityLaneEnv(host=host, port=port)
+    time.sleep(1)
+    return env"""
 
 
+def make_env(host="127.0.0.1", port=5555, frame_skip=1):
+    def _init():
+        env = UnityLaneEnv(host, port, frame_skip)
+        time.sleep(1)
+        return env
+    return _init
 
 

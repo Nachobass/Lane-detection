@@ -1,4 +1,4 @@
-/// Author: Samuel Arzt
+﻿/// Author: Samuel Arzt
 /// Date: March 2017
 
 #region Includes
@@ -128,8 +128,6 @@ public class CarController : MonoBehaviour
         //Get control inputs from Agent
         if (!UseUserInput && !UseExternalControl)
         {
-            if (Agent == null || Agent.FNN == null)
-                return; // Defensive: skip until Agent is assigned
             //Get readings from sensors
             double[] sensorOutput = new double[sensors.Length];
             for (int i = 0; i < sensors.Length; i++)
@@ -164,5 +162,3 @@ public class CarController : MonoBehaviour
     }
     #endregion
 }
-
-
