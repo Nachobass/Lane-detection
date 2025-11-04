@@ -302,7 +302,7 @@ public class RLBridgeServer : MonoBehaviour
                             Debug.Log("RLBridgeServer: Waiting for reset completion...");
                             bool completed = false;
                             int waited = 0;
-                            int timeoutMs = 5000; // 5 segundos
+                            int timeoutMs = 10000; // 5 segundos
                             int intervalMs = 10;
 
                             while (!completed && waited < timeoutMs)
