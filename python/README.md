@@ -54,7 +54,7 @@ python PPO/eval_cartpole_ppo.py --weights runs/cartpole_ppo_clip/final.pt --epis
 ### 7) Test with BipedalWalker
 First, train the model:
 ```bash
-python PPO/train_bipedalwalker_ppo.py --timesteps 2000000 --logdir runs/bipedalwalker_ppo_clip
+python PPO/train_bipedalwalker_ppo.py --timesteps 10000000 --logdir runs/bipedalwalker_ppo_clip
 ```
 
 Then, evaluate the model:
