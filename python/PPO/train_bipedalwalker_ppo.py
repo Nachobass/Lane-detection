@@ -114,14 +114,23 @@ def main():
     recent_returns = []
     recent_returns_window = 10  # Track last 10 episodes
     
+    # Track solved status
+    SOLVED_THRESHOLD = 270.0  # BipedalWalker is solved at 300 points
+    solved_episodes = []
+    first_solved_at = None
+    first_solved_episode = None
+    
     print(f"Training PPO on {args.env}")
     print(f"Observation space: {obs_dim}D")
     print(f"Action space: {act_dim}D (continuous)")
     print(f"Device: {device}")
     print(f"Total timesteps: {args.timesteps}")
+    print(f"\nSolved Criteria: Return >= {SOLVED_THRESHOLD:.1f} points")
+    print("  - Normal version: 300 points in 1600 time steps")
+    print("  - Hardcore version: 300 points in 2000 time steps")
     print("-" * 50)
-    print(f"{'Episode':<8} {'Return':<10} {'Length':<8} {'Avg Return':<12} {'Best':<10} {'Steps':<10}")
-    print("-" * 70)
+    print(f"{'Episode':<8} {'Return':<10} {'Length':<8} {'Avg Return':<12} {'Best':<10} {'Steps':<10} {'Status':<10}")
+    print("-" * 80)
     
     while total_steps < args.timesteps:
         # Collect rollout of length cfg.n_steps
@@ -159,9 +168,30 @@ def main():
                     agent.save(os.path.join(args.logdir, "best.pt"))
                     is_best = True
                 
+                # Check if solved (300+ points)
+                is_solved = episode_return >= SOLVED_THRESHOLD
+                if is_solved:
+                    solved_episodes.append(episode_count)
+                    if first_solved_at is None:
+                        first_solved_at = total_steps
+                        first_solved_episode = episode_count
+                        # Save the first solved model
+                        agent.save(os.path.join(args.logdir, "solved.pt"))
+                        print("\n" + "="*80)
+                        print(" ENVIRONMENT SOLVED! ")
+                        print("="*80)
+                        print(f"First solved at Episode {episode_count} (Step {total_steps})")
+                        print(f"Return: {episode_return:.2f} (threshold: {SOLVED_THRESHOLD:.1f})")
+                        print(f"Episode Length: {episode_len}")
+                        print(f"Model saved to: {os.path.join(args.logdir, 'solved.pt')}")
+                        print("="*80 + "\n")
+                
+                # Log solved status to tensorboard
+                writer.add_scalar("rollout/is_solved", 1.0 if is_solved else 0.0, total_steps)
+                
                 # Print episode information
-                best_marker = " (BEST!)" if is_best else ""
-                print(f"{episode_count:<8} {episode_return:<10.2f} {episode_len:<8} {avg_return:<12.2f} {best_return:<10.2f} {total_steps:<10}{best_marker}")
+                status = "SOLVED!" if is_solved else ("BEST!" if is_best else "")
+                print(f"{episode_count:<8} {episode_return:<10.2f} {episode_len:<8} {avg_return:<12.2f} {best_return:<10.2f} {total_steps:<10} {status:<10}")
                 
                 obs, _ = env.reset()
                 episode_return = 0.0
@@ -207,15 +237,53 @@ def main():
             if recent_returns:
                 print(f"Average Return (last {len(recent_returns)} episodes): {np.mean(recent_returns):.2f}")
                 print(f"Std Return (last {len(recent_returns)} episodes): {np.std(recent_returns):.2f}")
+            
+            # Solved statistics
+            if solved_episodes:
+                solve_rate = len(solved_episodes) / episode_count * 100
+                print(f"\nSolved Status:")
+                print(f"  First solved: Episode {first_solved_episode} @ Step {first_solved_at}")
+                print(f"  Solved episodes: {len(solved_episodes)} / {episode_count} ({solve_rate:.1f}%)")
+                if len(solved_episodes) >= 10:
+                    recent_solved = [ep for ep in solved_episodes if ep > episode_count - 10]
+                    print(f"  Recent solve rate: {len(recent_solved)}/10 ({len(recent_solved)/10*100:.1f}%)")
+            else:
+                print(f"\nSolved Status: Not yet solved (need {SOLVED_THRESHOLD:.1f}+ points)")
+            
             print("="*70 + "\n")
 
     env.close()
     writer.close()
     # Save final weights
     agent.save(args.save_path)
-    print(f"\nTraining completed!")
-    print(f"Final model saved to {args.save_path}")
-    print(f"Best return achieved: {best_return:.2f}")
+    
+    print("\n" + "="*70)
+    print("Training Completed!")
+    print("="*70)
+    print(f"Final model saved to: {args.save_path}")
+    print(f"\nFinal Statistics:")
+    print(f"  Total Episodes: {episode_count}")
+    print(f"  Total Steps: {total_steps}")
+    print(f"  Best Return: {best_return:.2f}")
+    if recent_returns:
+        print(f"  Average Return (last {len(recent_returns)} episodes): {np.mean(recent_returns):.2f}")
+        print(f"  Std Return (last {len(recent_returns)} episodes): {np.std(recent_returns):.2f}")
+    
+    # Final solved statistics
+    print(f"\nSolved Statistics:")
+    if solved_episodes:
+        solve_rate = len(solved_episodes) / episode_count * 100
+        print(f"   SOLVED! First solved at Episode {first_solved_episode} (Step {first_solved_at})")
+        print(f"  Solved episodes: {len(solved_episodes)} / {episode_count} ({solve_rate:.1f}%)")
+        if len(solved_episodes) >= 10:
+            recent_solved = [ep for ep in solved_episodes[-10:]]
+            print(f"  Last 10 episodes solve rate: {len(recent_solved)}/10 ({len(recent_solved)/10*100:.1f}%)")
+        print(f"  Solved model saved to: {os.path.join(args.logdir, 'solved.pt')}")
+    else:
+        print(f"   Not solved (need {SOLVED_THRESHOLD:.1f}+ points)")
+        print(f"  Best return achieved: {best_return:.2f} / {SOLVED_THRESHOLD:.1f}")
+    
+    print("="*70)
 
 
 if __name__ == "__main__":

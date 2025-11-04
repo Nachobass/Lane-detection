@@ -68,10 +68,13 @@ def main():
 
     returns = []
     episode_lengths = []
+    solved_count = 0
+    SOLVED_THRESHOLD = 270.0  # BipedalWalker is solved at 300 points
     
     print(f"Evaluating agent for {args.episodes} episodes on {args.env}...")
     print(f"Observation space: {obs_dim}D")
     print(f"Action space: {act_dim}D (continuous)")
+    print(f"Solved threshold: {SOLVED_THRESHOLD:.1f} points")
     print("-" * 50)
     
     for ep in range(args.episodes):
@@ -90,11 +93,18 @@ def main():
             done = bool(terminated) or bool(truncated)
             steps += 1
         
+        is_solved = ret >= SOLVED_THRESHOLD
+        if is_solved:
+            solved_count += 1
+        
         returns.append(ret)
         episode_lengths.append(steps)
-        print(f"Episode {ep+1}: return={ret:.2f}, steps={steps}")
+        status = " SOLVED" if is_solved else ""
+        print(f"Episode {ep+1}: return={ret:.2f}, steps={steps} {status}")
 
     env.close()
+    
+    solve_rate = (solved_count / args.episodes * 100) if args.episodes > 0 else 0.0
     
     print("\n" + "="*50)
     print(f"Evaluation Results ({args.episodes} episodes):")
@@ -102,6 +112,11 @@ def main():
     print(f"  Mean Episode Length: {np.mean(episode_lengths):.2f} ± {np.std(episode_lengths):.2f}")
     print(f"  Min Return: {np.min(returns):.2f}")
     print(f"  Max Return: {np.max(returns):.2f}")
+    print(f"\nSolved Status (threshold: {SOLVED_THRESHOLD:.1f} points):")
+    print(f"  Solved episodes: {solved_count} / {args.episodes} ({solve_rate:.1f}%)")
+    if solved_count > 0:
+        solved_returns = [r for r in returns if r >= SOLVED_THRESHOLD]
+        print(f"  Average solved return: {np.mean(solved_returns):.2f}")
     print("="*50)
 
 
