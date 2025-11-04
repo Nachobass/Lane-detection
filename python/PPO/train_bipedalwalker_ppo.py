@@ -86,7 +86,7 @@ def main():
     obs_dim = int(obs.shape[0])
     act_dim = int(env.action_space.shape[0])  # Continuous action space
     
-    # Configure PPO for BipedalWalker (more complex environment needs larger networks)
+    # Configure PPO for BipedalWalker 
     cfg = PPOConfig(
         gamma=0.99,
         gae_lambda=0.95,
@@ -100,7 +100,7 @@ def main():
         n_steps=2048,
         hidden_sizes=(256, 256),  # Larger network for more complex environment
     )
-    # Note: discrete=False is the default, so continuous actions are used
+    # discrete=False is the default, so continuous actions are used
     agent = PPOClip(obs_dim=obs_dim, act_dim=act_dim, config=cfg, device=device, discrete=False)
 
     episode_return = 0.0

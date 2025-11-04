@@ -9,6 +9,7 @@ import torch.optim as optim
 from .rollout import RolloutBuffer, TrajectoryBatch
 
 
+
 class MLP(nn.Module):
     def __init__(self, in_dim: int, out_dim: int, hidden: Tuple[int, int] = (128, 128), activation: nn.Module = nn.Tanh()):
         super().__init__()
@@ -24,6 +25,7 @@ class MLP(nn.Module):
         return self.net(x)
 
 
+# Policy network for continuous actions
 class GaussianPolicy(nn.Module):
     def __init__(self, obs_dim: int, act_dim: int, hidden: Tuple[int, int] = (128, 128)):
         super().__init__()
@@ -46,7 +48,7 @@ class GaussianPolicy(nn.Module):
         logp = d.log_prob(action).sum(-1)
         return action, logp, d.mean
 
-
+# Policy network for discrete actions
 class CategoricalPolicy(nn.Module):
     """Policy for discrete action spaces."""
     def __init__(self, obs_dim: int, act_dim: int, hidden: Tuple[int, int] = (128, 128)):
@@ -95,10 +97,10 @@ class PPOClip(nn.Module):
         else:
             self.policy = GaussianPolicy(obs_dim, act_dim, hidden=config.hidden_sizes).to(device)
             buffer_act_dim = act_dim
-        self.value = MLP(obs_dim, 1, hidden=config.hidden_sizes).to(device)
+        self.value = MLP(obs_dim, 1, hidden=config.hidden_sizes).to(device)                                                             # Value network
 
         self.optim = optim.Adam(list(self.policy.parameters()) + list(self.value.parameters()), lr=config.learning_rate)
-        self.buffer = RolloutBuffer(config.n_steps, obs_dim, buffer_act_dim, device)
+        self.buffer = RolloutBuffer(config.n_steps, obs_dim, buffer_act_dim, device)                                                # buffer_size = n_steps = 1024 x ahora
 
     @torch.no_grad()
     def select_action(self, obs: torch.Tensor) -> Tuple[torch.Tensor, float, float]:
