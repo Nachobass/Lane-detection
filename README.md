@@ -18,7 +18,7 @@ After that, you can go to the `python` folder and open the notebook `ppo_experim
 2) Open the project located in the `UnityProject` folder from Unity Hub.
 3) In the Unity Editor, navigate to the `Assets/Main` folder.
 4) Right-click inside the Hierarchy and select “Create Empty”. Name the new GameObject **RLBridge**.
-5) With RLBridge selected, go to the Inspector and add the **RLBridgeServer** MonoBehaviour component (from your Scripts/Simulation folder).
+5) With RLBridge selected, go to the Inspector and add the **RLBridgeServer** MonoBehaviour component (from your Scripts/Simulation folder), the **CarController** and the **CarMovement** components.
 6) Press Play. In the Console, you should see the message: `RLBridgeServer listening on 127.0.0.1:5555`.
 7) Then, go to the python folder and open the notebook `ppo_experiments.ipynb`.
 
