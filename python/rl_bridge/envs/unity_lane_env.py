@@ -67,7 +67,7 @@ class UnityLaneEnv(gym.Env):
             self._obs_size = int(obs.shape[0])
             self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self._obs_size,), dtype=np.float32)
 
-    # --- Gym API ---
+    # --- Gym API ---       ACA ESTA LA FALLA
     def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None) -> Tuple[np.ndarray, dict]:
         super().reset(seed=seed)
         self._connect()

@@ -10,7 +10,7 @@ Prereqs
 pip install -r ../requirements.txt
 ```
 
-Stable-Baselines3 tuner
+<!-- Stable-Baselines3 tuner
 -----------------------
 
 ```bash
@@ -25,7 +25,7 @@ Optional persistent storage (resume/inspect best):
 
 ```bash
 python PPO/tune_ppo.py --storage sqlite:///ppo_opt.db --trials 40
-```
+``` -->
 
 TensorBoard
 -----------

@@ -66,3 +66,23 @@ To evaluate the model with rendering, add the `--render` flag:
 ```bash
 python PPO/eval_bipedalwalker_ppo.py --weights runs/bipedalwalker_ppo_clip/final.pt --episodes 10 --render
 ```
+
+
+### 8) Test with MountainCar
+First, train the model:
+```bash
+python PPO/train_mountain_car_ppo.py --timesteps 10000000 --logdir runs/mountain_car_ppo_clip
+```
+
+Then, evaluate the model:
+```bash
+python PPO/eval_mountain_car_ppo.py --weights runs/mountain_car_ppo_clip/final.pt --episodes 10
+```
+
+To evaluate the model with rendering, add the `--render` flag:
+```bash
+python PPO/eval_mountain_car_ppo.py --weights runs/mountain_car_ppo_clip/final.pt --episodes 10 --render
+```
+
+### Check tests in:
+Open `PPO/env_tests.ipynb` for tests of PPO Clip in different environments.

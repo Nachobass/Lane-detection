@@ -1,7 +1,4 @@
-﻿/// Author: Samuel Arzt
-/// Date: March 2017
-
-#region Includes
+﻿#region Includes
 using UnityEngine;
 #endregion
 
@@ -112,7 +109,7 @@ public class CarController : MonoBehaviour
         foreach (Sensor s in sensors)
             s.Show();
 
-        Agent.Reset();
+        Agent.Reset();                                                                       // este reset falla
         this.enabled = true;
     }
 

@@ -114,13 +114,16 @@ public class RLBridgeServer : MonoBehaviour
 
                 try
                 {
-                    controlledCar.Restart();
+                    controlledCar.Restart();                                                    // este restart falla
                     Debug.Log("RLBridgeServer: Car.Restart() called successfully");
                 }
                 catch (Exception ex)
                 {
                     Debug.LogWarning($"RLBridgeServer: Car.Restart() failed: {ex.Message}");
                 }
+                
+                // controlledCar.Restart();                                                    // este restart falla
+                // Debug.Log("RLBridgeServer: Car.Restart() called successfully");
             }
 
             prevCompletion = 0f;

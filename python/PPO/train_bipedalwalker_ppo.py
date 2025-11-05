@@ -86,21 +86,35 @@ def main():
     obs_dim = int(obs.shape[0])
     act_dim = int(env.action_space.shape[0])  # Continuous action space
     
-    # Configure PPO for BipedalWalker 
+    # Configure PPO for BipedalWalker (more complex environment needs larger networks)
+    # cfg = PPOConfig(
+    #     gamma=0.99,
+    #     gae_lambda=0.95,
+    #     clip_range=0.2,
+    #     learning_rate=3e-4,
+    #     ent_coef=0.01,  # Entropy bonus for exploration
+    #     vf_coef=0.5,
+    #     max_grad_norm=0.5,
+    #     n_epochs=10,
+    #     batch_size=64,
+    #     n_steps=2048,
+    #     hidden_sizes=(256, 256),  # Larger network for more complex environment
+    # )
     cfg = PPOConfig(
         gamma=0.99,
         gae_lambda=0.95,
         clip_range=0.2,
-        learning_rate=3e-4,
-        ent_coef=0.01,  # Entropy bonus for exploration
+        learning_rate=2e-4,
+        ent_coef=0.005,       # menos exploración cuando ya aprende
         vf_coef=0.5,
         max_grad_norm=0.5,
-        n_epochs=10,
-        batch_size=64,
+        n_epochs=5,           # menos pasadas, evita overfitting
+        batch_size=128,       # batches más grandes = gradientes más estables
         n_steps=2048,
-        hidden_sizes=(256, 256),  # Larger network for more complex environment
+        hidden_sizes=(256, 256, 128),
     )
-    # discrete=False is the default, so continuous actions are used
+
+    # Note: discrete=False is the default, so continuous actions are used
     agent = PPOClip(obs_dim=obs_dim, act_dim=act_dim, config=cfg, device=device, discrete=False)
 
     episode_return = 0.0
@@ -284,6 +298,18 @@ def main():
         print(f"  Best return achieved: {best_return:.2f} / {SOLVED_THRESHOLD:.1f}")
     
     print("="*70)
+
+    print("\n" + "="*70)
+    print("TensorBoard Logging")
+    print("="*70)
+    print(f"Log directory: {logdir_abs}")
+    print(f"\nTo view training plots, run:")
+    print(f"  tensorboard --logdir {logdir_abs}")
+    print(f"\nThen open your browser and navigate to:")
+    print(f"  http://localhost:6006")
+    print(f"\nOr use the full path:")
+    print(f"  http://localhost:6006/#scalars")
+    print("="*70 + "\n")
 
 
 if __name__ == "__main__":
