@@ -27,6 +27,10 @@ This notebook connects to the Unity environment and trains the PPO agent through
 Note: We are currently working on resolving timeout errors during the reset phase, but we are working on it.
 
 
+<!-- Run: `tensorboard --logdir=runs/ppo_lane` to see the training progress. -->
+
+# Tensorboard
+Run: `tensorboard --logdir=python/notebooks/runs/ppo_lane` to see the training progress.
 
 
 

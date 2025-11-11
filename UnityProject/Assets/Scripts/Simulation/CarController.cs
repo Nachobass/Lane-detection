@@ -93,7 +93,8 @@ public class CarController : MonoBehaviour
         Movement.HitWall += Die;
 
         //Set name to be unique
-        this.name = "Car (" + NextID + ")";
+        this.name = "Car (" + idGenerator + ")";
+        idGenerator++;
     }
     #endregion
 

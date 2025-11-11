@@ -1,4 +1,3 @@
-
 #region Includes
 using System;
 using System.Net;
@@ -83,7 +82,21 @@ public class RLBridgeServer : MonoBehaviour
 
         // Get sensors
         sensors = controlledCar.GetComponentsInChildren<Sensor>();
-        Debug.Log($"RLBridgeServer: Found {sensors.Length} sensors");
+        if (sensors == null || sensors.Length == 0)
+        {
+            Debug.LogWarning($"RLBridgeServer: Car '{controlledCar.name}' has no sensors! Observation will only include velocity.");
+            sensors = new Sensor[0]; // Ensure it's not null
+        }
+        else
+        {
+            Debug.Log($"RLBridgeServer: Found {sensors.Length} sensors on car '{controlledCar.name}'");
+        }
+        
+        // Verify Movement component exists
+        if (controlledCar.Movement == null)
+        {
+            Debug.LogError($"RLBridgeServer: Car '{controlledCar.name}' does not have a Movement component!");
+        }
     }
 
     void Start()
@@ -139,25 +152,101 @@ public class RLBridgeServer : MonoBehaviour
         // Procesar paso si se solicitó
         if (stepRequested.WaitOne(0))
         {
-            double turn = 0, throttle = 0;
-            if (pendingAction != null && pendingAction.Length >= 2)
+            try
             {
-                turn = Mathf.Clamp((float)pendingAction[0], -1f, 1f);
-                throttle = Mathf.Clamp((float)pendingAction[1], -1f, 1f);
+                if (controlledCar == null)
+                {
+                    Debug.LogError("RLBridgeServer: controlledCar is null in FixedUpdate step processing");
+                    stepResponseJson = BuildResponseJson(new float[] { 0f }, 0f, true);
+                    stepCompleted.Set();
+                    return;
+                }
+
+                double turn = 0, throttle = 0;
+                if (pendingAction != null && pendingAction.Length >= 2)
+                {
+                    turn = Mathf.Clamp((float)pendingAction[0], -1f, 1f);
+                    throttle = Mathf.Clamp((float)pendingAction[1], -1f, 1f);
+                }
+
+                if (controlledCar.Movement != null)
+                {
+                    controlledCar.Movement.SetInputs(new double[] { turn, throttle });
+                }
+                else
+                {
+                    Debug.LogWarning("RLBridgeServer: controlledCar.Movement is null");
+                }
+
+                float[] obs = BuildObservation();
+                float completion = controlledCar != null ? controlledCar.CurrentCompletionReward : 0f;
+                float reward = completion - prevCompletion;
+                prevCompletion = completion;
+                bool done = controlledCar == null || !controlledCar.enabled;
+
+                stepResponseJson = BuildResponseJson(obs, reward, done);
+                episodeReward += reward;
+                stepCompleted.Set();
             }
-
-            controlledCar.Movement.SetInputs(new double[] { turn, throttle });
-
-            float[] obs = BuildObservation();
-            float completion = controlledCar.CurrentCompletionReward;
-            float reward = completion - prevCompletion;
-            prevCompletion = completion;
-            bool done = !controlledCar.enabled;
-
-            stepResponseJson = BuildResponseJson(obs, reward, done);
-            episodeReward += reward;
-            stepCompleted.Set();
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"RLBridgeServer: Exception in FixedUpdate step processing: {ex.Message}\n{ex.StackTrace}");
+                // Return safe default observation
+                stepResponseJson = BuildResponseJson(new float[] { 0f }, 0f, false);
+                stepCompleted.Set();
+            }
         }
+        // if (stepRequested.WaitOne(0))
+        // {
+        //     try
+        //     {
+        //         double turn = 0, throttle = 0;
+        //         if (pendingAction != null && pendingAction.Length >= 2)
+        //         {
+        //             turn = Mathf.Clamp((float)pendingAction[0], -1f, 1f);
+        //             throttle = Mathf.Clamp((float)pendingAction[1], -1f, 1f);
+        //         }
+
+        //         if (controlledCar != null && controlledCar.Movement != null)
+        //         {
+        //             controlledCar.Movement.SetInputs(new double[] { turn, throttle });
+        //         }
+
+        //         float[] obs = BuildObservation();
+        //         float completion = controlledCar != null ? controlledCar.CurrentCompletionReward : 0f;
+        //         float reward = completion - prevCompletion;
+        //         prevCompletion = completion;
+        //         bool done = controlledCar == null || !controlledCar.enabled;
+
+        //         stepResponseJson = BuildResponseJson(obs, reward, done);
+        //         episodeReward += reward;
+        //         stepCompleted.Set();
+        //         Debug.Log($"RLBridgeServer: Step processed successfully. Reward: {reward}, Done: {done}");
+        //     }
+        //     catch (System.Exception ex)
+        //     {
+        //         Debug.LogError($"RLBridgeServer: Error processing step in FixedUpdate: {ex.Message}\n{ex.StackTrace}");
+        //         // Set error response
+        //         stepResponseJson = $"{{\"error\":\"step_processing_failed\",\"message\":\"{ex.Message}\"}}";
+        //         stepCompleted.Set();
+        //     }
+        // }
+
+        // if (stepRequested.WaitOne(0))
+        // {
+        //     Debug.Log("RLBridgeServer: Step triggered in FixedUpdate");
+
+        //     // ignorar el auto por ahora
+        //     float[] obs = new float[] { 0f };
+        //     float reward = 0f;
+        //     bool done = false;
+
+        //     stepResponseJson = BuildResponseJson(obs, reward, done);
+        //     stepCompleted.Set();
+
+        //     Debug.Log("RLBridgeServer: Step completed with dummy response");
+        // }
+
     }
 
 
@@ -331,12 +420,15 @@ public class RLBridgeServer : MonoBehaviour
                         else if (cmd.Name == "step")
                         {
                             Debug.Log($"RLBridgeServer: Processing step command: [{cmd.Action[0]}, {cmd.Action[1]}]");
+                            // Reset the completion event before requesting a new step
+                            stepCompleted.Reset();
+                            stepResponseJson = null;
                             pendingAction = cmd.Action;
                             stepRequested.Set();
 
                             bool stepDone = false;
                             int waitedStep = 0;
-                            int stepTimeoutMs = 5000;
+                            int stepTimeoutMs = 10000; // Increased timeout to 10 seconds
                             int stepIntervalMs = 10;
 
                             while (!stepDone && waitedStep < stepTimeoutMs)
@@ -347,7 +439,7 @@ public class RLBridgeServer : MonoBehaviour
 
                             if (!stepDone)
                             {
-                                Debug.LogWarning("RLBridgeServer: Step timeout");
+                                Debug.LogError($"RLBridgeServer: Step timeout after {waitedStep}ms. FixedUpdate may not be running or car is not responding.");
                             }
 
                             string resp = stepResponseJson ?? "{\"error\":\"timeout\"}";
@@ -385,12 +477,62 @@ public class RLBridgeServer : MonoBehaviour
     #region Helper Methods
     private float[] BuildObservation()
     {
-        if (sensors == null) sensors = controlledCar.GetComponentsInChildren<Sensor>();
-        float[] obs = new float[sensors.Length + 1]; // sensors + velocity
-        for (int i = 0; i < sensors.Length; i++)
-            obs[i] = sensors[i].Output;
-        obs[sensors.Length] = controlledCar.Movement.Velocity;
-        return obs;
+        try
+        {
+            if (controlledCar == null)
+            {
+                Debug.LogError("RLBridgeServer: controlledCar is null in BuildObservation");
+                return new float[] { 0f }; // Return minimal observation
+            }
+
+            // Get sensors if not already cached
+            if (sensors == null)
+            {
+                sensors = controlledCar.GetComponentsInChildren<Sensor>();
+                if (sensors == null)
+                {
+                    Debug.LogWarning("RLBridgeServer: GetComponentsInChildren<Sensor>() returned null, using empty array");
+                    sensors = new Sensor[0];
+                }
+                Debug.Log($"RLBridgeServer: Found {sensors.Length} sensors on car");
+            }
+
+            // Create observation array: sensors + velocity
+            float[] obs = new float[sensors.Length + 1];
+            
+            // Read sensor values (handle null sensors)
+            for (int i = 0; i < sensors.Length; i++)
+            {
+                if (sensors[i] != null)
+                {
+                    obs[i] = sensors[i].Output;
+                }
+                else
+                {
+                    Debug.LogWarning($"RLBridgeServer: Sensor at index {i} is null");
+                    obs[i] = 0f;
+                }
+            }
+
+            // Add velocity
+            if (controlledCar.Movement != null)
+            {
+                obs[sensors.Length] = controlledCar.Movement.Velocity;
+            }
+            else
+            {
+                Debug.LogWarning("RLBridgeServer: controlledCar.Movement is null, velocity set to 0");
+                obs[sensors.Length] = 0f;
+            }
+
+            return obs;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"RLBridgeServer: Exception in BuildObservation: {ex.Message}\n{ex.StackTrace}");
+            // Return safe default observation
+            return new float[] { 0f };
+        }
     }
 
     private string BuildResponseJson(float[] obs, float reward, bool done)
