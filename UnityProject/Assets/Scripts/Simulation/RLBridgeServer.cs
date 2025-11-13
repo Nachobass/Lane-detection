@@ -122,21 +122,71 @@ public class RLBridgeServer : MonoBehaviour
 
             if (controlledCar != null)
             {
+                // Reset car position and rotation
                 controlledCar.transform.position = Vector3.zero;
                 controlledCar.transform.rotation = Quaternion.identity;
 
+                // Reset car: use Restart() if Agent exists, otherwise reset manually
                 try
                 {
-                    controlledCar.Restart();                                                    // este restart falla
-                    Debug.Log("RLBridgeServer: Car.Restart() called successfully");
+                    if (controlledCar.Agent != null)
+                    {
+                        // Agent exists - use Restart() which will handle everything including Agent.Reset()
+                        controlledCar.Restart();
+                        Debug.Log("RLBridgeServer: Car.Restart() called successfully (Agent exists)");
+                    }
+                    else
+                    {
+                        // Agent is null (external control) - manually reset car without calling Agent.Reset()
+                        // Enable movement
+                        if (controlledCar.Movement != null)
+                        {
+                            controlledCar.Movement.enabled = true;
+                        }
+                        else
+                        {
+                            Debug.LogWarning("RLBridgeServer: controlledCar.Movement is null during reset");
+                        }
+
+                        // Show sensors
+                        if (sensors == null)
+                        {
+                            sensors = controlledCar.GetComponentsInChildren<Sensor>();
+                        }
+                        if (sensors != null && sensors.Length > 0)
+                        {
+                            foreach (Sensor s in sensors)
+                            {
+                                if (s != null)
+                                {
+                                    s.Show();
+                                }
+                            }
+                        }
+
+                        // Reset checkpoint timer (CheckpointCaptured sets timeSinceLastCheckpoint = 0)
+                        controlledCar.CheckpointCaptured();
+
+                        // Enable the car
+                        controlledCar.enabled = true;
+
+                        Debug.Log("RLBridgeServer: Car reset manually (no Agent - external control mode)");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning($"RLBridgeServer: Car.Restart() failed: {ex.Message}");
+                    Debug.LogError($"RLBridgeServer: Error during car reset: {ex.Message}\n{ex.StackTrace}");
+                    // Try to at least enable the car and movement even if reset partially failed
+                    try
+                    {
+                        if (controlledCar.Movement != null)
+                        {
+                            controlledCar.Movement.enabled = true;
+                        }
+                        controlledCar.enabled = true;
+                    }
+                    catch { }
                 }
-                
-                // controlledCar.Restart();                                                    // este restart falla
-                // Debug.Log("RLBridgeServer: Car.Restart() called successfully");
             }
 
             prevCompletion = 0f;
@@ -179,7 +229,49 @@ public class RLBridgeServer : MonoBehaviour
                 }
 
                 float[] obs = BuildObservation();
-                float completion = controlledCar != null ? controlledCar.CurrentCompletionReward : 0f;
+                
+                // Safely get completion reward
+                // The reward is typically updated by TrackManager, but Agent may be null when using external control
+                float completion = 0f;
+                try
+                {
+                    // Try to get reward from CarController's CurrentCompletionReward property
+                    if (controlledCar != null)
+                    {
+                        // Check if Agent exists before accessing its properties
+                        var agent = controlledCar.Agent;
+                        if (agent != null)
+                        {
+                            // Check if Genotype exists before accessing CurrentCompletionReward
+                            if (agent.Genotype != null)
+                            {
+                                completion = controlledCar.CurrentCompletionReward;
+                            }
+                            else
+                            {
+                                // Agent exists but Genotype is null
+                                completion = 0f;
+                            }
+                        }
+                        else
+                        {
+                            // Agent is null - this is expected when using external control without Agent setup
+                            completion = 0f;
+                        }
+                    }
+                }
+                catch (System.NullReferenceException)
+                {
+                    // Agent or Genotype is null - this is expected when using external control without Agent setup
+                    completion = 0f;
+                }
+                catch (System.Exception ex)
+                {
+                    // Other exception - log but continue with 0 reward
+                    Debug.LogWarning($"RLBridgeServer: Error accessing completion reward: {ex.Message}");
+                    completion = 0f;
+                }
+                
                 float reward = completion - prevCompletion;
                 prevCompletion = completion;
                 bool done = controlledCar == null || !controlledCar.enabled;
