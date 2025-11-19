@@ -145,13 +145,28 @@ public class CarController : MonoBehaviour
     private void Die()
     {
         this.enabled = false;
-        Movement.Stop();
-        Movement.enabled = false;
+        if (Movement != null)
+        {
+            Movement.Stop();
+            Movement.enabled = false;
+        }
 
-        foreach (Sensor s in sensors)
-            s.Hide();
+        if (sensors != null)
+        {
+            foreach (Sensor s in sensors)
+            {
+                if (s != null)
+                {
+                    s.Hide();
+                }
+            }
+        }
 
-        Agent.Kill();
+        // Only call Agent.Kill() if Agent exists (may be null when using external control)
+        if (Agent != null)
+        {
+            Agent.Kill();
+        }
     }
 
     public void CheckpointCaptured()

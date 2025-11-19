@@ -2,6 +2,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using UnityEngine;
@@ -60,18 +61,67 @@ public class RLBridgeServer : MonoBehaviour
                 controlledCar = Instantiate(carPrefab);
                 controlledCar.name = carPrefab.name;
             }
-            // 3. Find any CarController in the scene
+            // 3. Find any CarController in the scene (prefer one with sensors)
             else
             {
-                controlledCar = FindObjectOfType<CarController>();
-                if (controlledCar == null)
+                CarController[] allCars = FindObjectsOfType<CarController>();
+                if (allCars == null || allCars.Length == 0)
                 {
                     Debug.LogError("RLBridgeServer: No CarController found in scene or prefab assigned!");
                     return;
                 }
+                
+                // Prefer a car that has sensors
+                CarController carWithSensors = null;
+                foreach (CarController car in allCars)
+                {
+                    Sensor[] carSensors = car.GetComponentsInChildren<Sensor>();
+                    if (carSensors != null && carSensors.Length > 0)
+                    {
+                        carWithSensors = car;
+                        break; // Found one with sensors, use it
+                    }
+                }
+                
+                if (carWithSensors != null)
+                {
+                    controlledCar = carWithSensors;
+                    Debug.Log($"RLBridgeServer: Using CarController '{controlledCar.name}' with sensors (found {allCars.Length} total cars)");
+                }
                 else
                 {
-                    Debug.LogWarning("RLBridgeServer: Using existing CarController in scene as fallback.");
+                    // No car has sensors, use the first one found
+                    controlledCar = allCars[0];
+                    Debug.LogWarning($"RLBridgeServer: Using CarController '{controlledCar.name}' as fallback (no car with sensors found out of {allCars.Length} total cars)");
+                }
+            }
+        }
+        
+        // Check if assigned car has sensors, if not, try to find one that does
+        if (controlledCar != null)
+        {
+            Sensor[] assignedCarSensors = controlledCar.GetComponentsInChildren<Sensor>();
+            if (assignedCarSensors == null || assignedCarSensors.Length == 0)
+            {
+                // Assigned car has no sensors, look for one that does
+                CarController[] allCars = FindObjectsOfType<CarController>();
+                CarController carWithSensors = null;
+                
+                foreach (CarController car in allCars)
+                {
+                    if (car == controlledCar) continue; // Skip the one we already checked
+                    Sensor[] carSensors = car.GetComponentsInChildren<Sensor>();
+                    if (carSensors != null && carSensors.Length > 0)
+                    {
+                        carWithSensors = car;
+                        break;
+                    }
+                }
+                
+                if (carWithSensors != null)
+                {
+                    Debug.LogWarning($"RLBridgeServer: Assigned car '{controlledCar.name}' has no sensors. Switching to '{carWithSensors.name}' which has sensors.");
+                    controlledCar = carWithSensors;
                 }
             }
         }
@@ -82,6 +132,13 @@ public class RLBridgeServer : MonoBehaviour
 
         // Get sensors
         sensors = controlledCar.GetComponentsInChildren<Sensor>();
+        if (sensors == null || sensors.Length == 0)
+        {
+            Debug.LogWarning($"RLBridgeServer: Car '{controlledCar.name}' has no sensors! Creating 5 sensors automatically.");
+            CreateSensorsForCar(controlledCar);
+            sensors = controlledCar.GetComponentsInChildren<Sensor>();
+        }
+        
         if (sensors == null || sensors.Length == 0)
         {
             Debug.LogWarning($"RLBridgeServer: Car '{controlledCar.name}' has no sensors! Observation will only include velocity.");
@@ -567,6 +624,123 @@ public class RLBridgeServer : MonoBehaviour
     #endregion
 
     #region Helper Methods
+    /// <summary>
+    /// Automatically creates 5 sensors for a car that doesn't have any.
+    /// Sensors are arranged in a typical front-facing configuration.
+    /// </summary>
+    private void CreateSensorsForCar(CarController car)
+    {
+        if (car == null) return;
+
+        try
+        {
+            // Try to load cross sprite from Resources (if available)
+            Sprite crossSprite = Resources.Load<Sprite>("Sprites/cross");
+            if (crossSprite == null)
+            {
+                // Try alternative path
+                crossSprite = Resources.Load<Sprite>("cross");
+            }
+            
+            // If still null, create a simple default sprite
+            if (crossSprite == null)
+            {
+                // Create a simple 4x4 white texture for the cross
+                Texture2D tex = new Texture2D(4, 4);
+                Color[] pixels = new Color[16];
+                for (int i = 0; i < 16; i++)
+                    pixels[i] = Color.white;
+                tex.SetPixels(pixels);
+                tex.Apply();
+                
+                crossSprite = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 40f);
+            }
+
+            // Define 5 sensor positions and directions (typical front-facing arrangement)
+            // Format: (localPosition, crossOffset) where crossOffset determines direction
+            Vector2[] sensorPositions = new Vector2[]
+            {
+                new Vector2(0f, 0f),        // Sensor 0: Center (at car origin)
+                new Vector2(-0.3f, 0f),     // Sensor 1: Slight left
+                new Vector2(0.3f, 0f),      // Sensor 2: Slight right
+                new Vector2(-0.5f, 0f),     // Sensor 3: Left side
+                new Vector2(0.5f, 0f),      // Sensor 4: Right side
+            };
+
+            Vector2[] crossOffsets = new Vector2[]
+            {
+                new Vector2(0f, 1.5f),      // Sensor 0: Forward
+                new Vector2(-0.5f, 1.2f),   // Sensor 1: Forward-left
+                new Vector2(0.5f, 1.2f),    // Sensor 2: Forward-right
+                new Vector2(-1.5f, 0f),     // Sensor 3: Left
+                new Vector2(1.5f, 0f),      // Sensor 4: Right
+            };
+
+            // Try to get layer mask from existing sensors (if any other car has sensors configured)
+            int layerMask = -1; // All layers by default
+            Sensor[] existingSensors = FindObjectsOfType<Sensor>();
+            if (existingSensors != null && existingSensors.Length > 0)
+            {
+                // Use reflection to get LayerToSense from an existing sensor
+                var field = typeof(Sensor).GetField("LayerToSense", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (field != null)
+                {
+                    LayerMask existingMask = (LayerMask)field.GetValue(existingSensors[0]);
+                    layerMask = existingMask.value;
+                }
+            }
+            // If no existing sensors or failed to get mask, use all layers (-1) to detect walls
+            if (layerMask == -1)
+            {
+                layerMask = -1; // All layers (will detect walls on any layer)
+            }
+
+            // Create 5 sensors
+            for (int i = 0; i < 5; i++)
+            {
+                // Create sensor GameObject
+                GameObject sensorObj = new GameObject($"Sensor{i}");
+                sensorObj.transform.SetParent(car.transform, false);
+                sensorObj.transform.localPosition = sensorPositions[i];
+
+                // Add Sensor component
+                Sensor sensor = sensorObj.AddComponent<Sensor>();
+
+                // Create Cross child GameObject
+                GameObject crossObj = new GameObject("Cross");
+                crossObj.transform.SetParent(sensorObj.transform, false);
+                crossObj.transform.localPosition = crossOffsets[i];
+
+                // Add SpriteRenderer to Cross
+                SpriteRenderer crossRenderer = crossObj.AddComponent<SpriteRenderer>();
+                if (crossSprite != null)
+                {
+                    crossRenderer.sprite = crossSprite;
+                }
+                crossRenderer.color = new Color(1f, 0f, 0f, 0.5f); // Semi-transparent red for visibility
+
+                // Set Cross reference and LayerToSense using reflection
+                var crossField = typeof(Sensor).GetField("Cross", BindingFlags.NonPublic | BindingFlags.Instance);
+                var layerField = typeof(Sensor).GetField("LayerToSense", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (crossField != null)
+                {
+                    crossField.SetValue(sensor, crossRenderer);
+                }
+                if (layerField != null)
+                {
+                    layerField.SetValue(sensor, (LayerMask)layerMask);
+                }
+            }
+
+            Debug.Log($"RLBridgeServer: Created 5 sensors automatically for car '{car.name}'");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"RLBridgeServer: Failed to create sensors automatically: {ex.Message}\n{ex.StackTrace}");
+        }
+    }
+
     private float[] BuildObservation()
     {
         try
