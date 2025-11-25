@@ -43,8 +43,22 @@ public class RLBridgeServer : MonoBehaviour
     private double[] pendingAction = null; // [turn, throttle]
     private string stepResponseJson = null;
 
+    [Header("Reward Settings")]
+    [SerializeField] private float progressRewardWeight = 1.0f;
+    [SerializeField] private float laneKeepingRewardWeight = 0.2f;
+    [SerializeField] private float clearanceRewardWeight = 0.1f;
+    [SerializeField] private float speedRewardWeight = 0.05f;
+    [SerializeField] private float stagnationPenaltyPerSecond = 0.02f;
+    [SerializeField] private float crashPenalty = -1.0f;
+    [SerializeField] private float lowSpeedPenalty = -0.02f;
+    [SerializeField] private float sensorMaxDistance = 10f;
+    [SerializeField] private float maxSpeedForReward = 20f;
+
     private float prevCompletion = 0f;
     private float episodeReward = 0f;
+    private int stepsWithoutProgress = 0;
+    private Checkpoint[] cachedCheckpoints = null;
+    private int currentCheckpointIndex = 1;
 
     #endregion
 
@@ -248,6 +262,8 @@ public class RLBridgeServer : MonoBehaviour
 
             prevCompletion = 0f;
             episodeReward = 0f;
+            stepsWithoutProgress = 0;
+            currentCheckpointIndex = 1;
 
             float[] obs = BuildObservation();
             resetResponseJson = BuildResponseJson(obs, 0f, false);
@@ -286,52 +302,8 @@ public class RLBridgeServer : MonoBehaviour
                 }
 
                 float[] obs = BuildObservation();
-                
-                // Safely get completion reward
-                // The reward is typically updated by TrackManager, but Agent may be null when using external control
-                float completion = 0f;
-                try
-                {
-                    // Try to get reward from CarController's CurrentCompletionReward property
-                    if (controlledCar != null)
-                    {
-                        // Check if Agent exists before accessing its properties
-                        var agent = controlledCar.Agent;
-                        if (agent != null)
-                        {
-                            // Check if Genotype exists before accessing CurrentCompletionReward
-                            if (agent.Genotype != null)
-                            {
-                                completion = controlledCar.CurrentCompletionReward;
-                            }
-                            else
-                            {
-                                // Agent exists but Genotype is null
-                                completion = 0f;
-                            }
-                        }
-                        else
-                        {
-                            // Agent is null - this is expected when using external control without Agent setup
-                            completion = 0f;
-                        }
-                    }
-                }
-                catch (System.NullReferenceException)
-                {
-                    // Agent or Genotype is null - this is expected when using external control without Agent setup
-                    completion = 0f;
-                }
-                catch (System.Exception ex)
-                {
-                    // Other exception - log but continue with 0 reward
-                    Debug.LogWarning($"RLBridgeServer: Error accessing completion reward: {ex.Message}");
-                    completion = 0f;
-                }
-                
-                float reward = completion - prevCompletion;
-                prevCompletion = completion;
                 bool done = controlledCar == null || !controlledCar.enabled;
+                float reward = ComputeReward(obs, done);
 
                 stepResponseJson = BuildResponseJson(obs, reward, done);
                 episodeReward += reward;
@@ -624,6 +596,165 @@ public class RLBridgeServer : MonoBehaviour
     #endregion
 
     #region Helper Methods
+
+    private void EnsureCheckpointsCached()
+    {
+        if (cachedCheckpoints != null && cachedCheckpoints.Length > 0)
+            return;
+
+        cachedCheckpoints = FindObjectsOfType<Checkpoint>();
+        if (cachedCheckpoints != null && cachedCheckpoints.Length > 0)
+        {
+            Array.Sort(cachedCheckpoints, (a, b) => a.AccumulatedDistance.CompareTo(b.AccumulatedDistance));
+            currentCheckpointIndex = Mathf.Clamp(currentCheckpointIndex, 1, Mathf.Max(1, cachedCheckpoints.Length - 1));
+        }
+    }
+
+    private float GetCompletionFromCheckpoints()
+    {
+        EnsureCheckpointsCached();
+        if (cachedCheckpoints == null || cachedCheckpoints.Length == 0 || controlledCar == null)
+        {
+            return float.NaN;
+        }
+
+        if (currentCheckpointIndex <= 0)
+            currentCheckpointIndex = 1;
+
+        if (currentCheckpointIndex >= cachedCheckpoints.Length)
+        {
+            return 1f;
+        }
+
+        bool advanced = true;
+        float completion = prevCompletion;
+        while (advanced && currentCheckpointIndex < cachedCheckpoints.Length)
+        {
+            advanced = false;
+            Checkpoint target = cachedCheckpoints[currentCheckpointIndex];
+            float distance = Vector2.Distance(controlledCar.transform.position, target.transform.position);
+
+            if (distance <= target.CaptureRadius)
+            {
+                currentCheckpointIndex++;
+                controlledCar.CheckpointCaptured();
+                advanced = true;
+                if (currentCheckpointIndex >= cachedCheckpoints.Length)
+                {
+                    completion = 1f;
+                    break;
+                }
+
+                completion = cachedCheckpoints[currentCheckpointIndex - 1].AccumulatedReward;
+                continue;
+            }
+
+            float prevAccumulated = cachedCheckpoints[currentCheckpointIndex - 1].AccumulatedReward;
+            completion = prevAccumulated + target.GetRewardValue(distance);
+            break;
+        }
+
+        return Mathf.Clamp01(completion);
+    }
+
+    private float ComputeReward(float[] obs, bool done)
+    {
+        float reward = 0f;
+        float completion = prevCompletion;
+        bool progressAvailable = false;
+
+        float checkpointCompletion = GetCompletionFromCheckpoints();
+        if (!float.IsNaN(checkpointCompletion))
+        {
+            completion = checkpointCompletion;
+            progressAvailable = true;
+        }
+
+        if (progressAvailable)
+        {
+            float delta = Mathf.Max(0f, completion - prevCompletion);
+            if (delta > 0f)
+            {
+                reward += delta * progressRewardWeight;
+                stepsWithoutProgress = 0;
+            }
+            else
+            {
+                stepsWithoutProgress++;
+            }
+
+            prevCompletion = completion;
+        }
+        else
+        {
+            stepsWithoutProgress++;
+        }
+
+        if (stepsWithoutProgress > 0 && stagnationPenaltyPerSecond > 0f)
+        {
+            reward -= stagnationPenaltyPerSecond * Time.fixedDeltaTime;
+        }
+
+        int sensorCount = (obs != null && obs.Length > 1) ? obs.Length - 1 : 0;
+        float velocity = (obs != null && obs.Length > 0) ? obs[obs.Length - 1] : 0f;
+
+        if (sensorCount > 0 && sensorMaxDistance > 0f)
+        {
+            float minSensor = sensorMaxDistance;
+            float leftSum = 0f;
+            float rightSum = 0f;
+            int leftCount = 0;
+            int rightCount = 0;
+
+            for (int i = 0; i < sensorCount; i++)
+            {
+                float reading = obs[i];
+                if (reading < minSensor)
+                {
+                    minSensor = reading;
+                }
+
+                if (i < sensorCount / 2)
+                {
+                    leftSum += reading;
+                    leftCount++;
+                }
+                else
+                {
+                    rightSum += reading;
+                    rightCount++;
+                }
+            }
+
+            float leftAvg = leftCount > 0 ? leftSum / leftCount : sensorMaxDistance;
+            float rightAvg = rightCount > 0 ? rightSum / rightCount : sensorMaxDistance;
+
+            float laneBalance = 1f - Mathf.Clamp01(Mathf.Abs(leftAvg - rightAvg) / sensorMaxDistance);
+            reward += laneKeepingRewardWeight * ((laneBalance * 2f) - 1f);
+
+            float clearanceScore = Mathf.Clamp01(minSensor / sensorMaxDistance);
+            reward += clearanceRewardWeight * ((clearanceScore * 2f) - 1f);
+        }
+
+        float forwardSpeed = Mathf.Max(0f, velocity);
+        if (maxSpeedForReward > 0f)
+        {
+            float speedScore = Mathf.Clamp01(forwardSpeed / maxSpeedForReward);
+            reward += speedRewardWeight * speedScore;
+        }
+
+        if (forwardSpeed < 0.5f)
+        {
+            reward += lowSpeedPenalty;
+        }
+
+        if (done)
+        {
+            reward += crashPenalty;
+        }
+
+        return reward;
+    }
     /// <summary>
     /// Automatically creates 5 sensors for a car that doesn't have any.
     /// Sensors are arranged in a typical front-facing configuration.
