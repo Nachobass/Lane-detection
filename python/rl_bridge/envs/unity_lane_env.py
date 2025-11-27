@@ -88,6 +88,10 @@ class UnityLaneEnv(gym.Env):
         terminated = bool(data["done"])  # crash or episode end
         truncated = False
         info = {}
+        # NEWW
+        if "completion" in data:
+            info["completion"] = float(data["completion"])
+        # END NEWW
         return obs, reward, terminated, truncated, info
 
     def close(self):
