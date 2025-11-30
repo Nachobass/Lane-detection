@@ -1,39 +1,10 @@
-<!-- # Applying Evolutionary Artificial Neural Networks
+# Applying Evolutionary Artificial Neural Networks
 
 A 2D Unity simulation in which cars learn to navigate themselves through different courses. The cars are steered by a feedforward Neural Network. The weights of the network are trained using a modified genetic algorithm.
 Short demo video of an early version: https://youtu.be/rEDzUT3ymw4
 
 
-![](Images/Demo.gif) -->
-
-# How to use the Unity project
-
-<!-- First of all install Unity Hub and install the latest version of Unity. Then, open the project at `UnityProject`. 
-Then in Unity Editor, open the project assets folder and open the `Main` folder. There you need to 'Create empty' call `RLBridge` and in the inspector assign the `RLBridgeServer` MonoBehaviour.
-
-Press Play; the Console should show `RLBridgeServer listening on 127.0.0.1:5555`.
-
-After that, you can go to the `python` folder and open the notebook `ppo_experiments.ipynb` to train the PPO agent. The notebook will connect to the Unity project and train the PPO agent. "Now we are having time out errors, but we are working on it." -->
-1) Install Unity Hub and make sure you have the latest version of Unity installed.
-2) Open the project located in the `UnityProject` folder from Unity Hub.
-3) In the Unity Editor, navigate to the `Assets/Main` folder.
-4) Right-click inside the Hierarchy and select “Create Empty”. Name the new GameObject **RLBridge**.
-5) With RLBridge selected, go to the Inspector and add the **RLBridgeServer** MonoBehaviour component (from your Scripts/Simulation folder), the **CarController** and the **CarMovement** components.
-6) Press Play. In the Console, you should see the message: `RLBridgeServer listening on 127.0.0.1:5555`.
-7) Then, go to the python folder and open the notebook `ppo_experiments.ipynb`.
-
-This notebook connects to the Unity environment and trains the PPO agent through the TCP bridge.
-
-Note: We are currently working on resolving timeout errors during the reset phase, but we are working on it.
-
-
-<!-- Run: `tensorboard --logdir=runs/ppo_lane` to see the training progress. -->
-
-# Tensorboard
-Run: `tensorboard --logdir=python/notebooks/runs/ppo_lane` to see the training progress.
-
-
-
+![](Images/Demo.gif)
 
 
 ## The Simulation
@@ -44,7 +15,11 @@ Cars have to navigate through a course without touching the walls or any other o
 <img src="Images/Car.png" width="250">
 
 
-If you would like to tinker with the parameters of the simulation, you can do so in the Unity Editor. If you would simply like to run the simulation with default parameters, you can start the built file [Builds/Applying EANNs.exe](Builds/Applying EANNs.exe).
+If you would like to tinker with the parameters of the simulation, you can do so in the Unity Editor. 
+
+ **Linux**: `Build/RunCar.x86_64` (recomendado para entrenamiento con Reinforcement Learning)
+
+Para entrenar con Reinforcement Learning, ve a la carpeta `Agent/` y sigue las instrucciones en `Agent/README.md`.
 
 
 ## The Neural Network
@@ -80,6 +55,11 @@ In order to start the simulation on a specific course, open the Main scene and e
 
 ![Two different courses the cars can be trained on.](Images/Courses.png)
 
+
+## License
+
+Feel free to use my code in your personal projects. I would be very interested in any work that originates from this project. I would be more than happy to hear from your impressions and results, so feel free to mail me at arzt.samuel@live.de.
+You can also follow me on twitter: https://twitter.com/SamuelArzt
 
 
 

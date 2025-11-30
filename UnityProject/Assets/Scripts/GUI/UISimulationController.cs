@@ -26,9 +26,6 @@ public class UISimulationController : MonoBehaviour
             if (target != value)
             {
                 target = value;
-
-                if (target != null)
-                    NeuralNetPanel.Display(target.Agent.FNN);
             }
         }
     }
@@ -40,15 +37,9 @@ public class UISimulationController : MonoBehaviour
     private Text Evaluation;
     [SerializeField]
     private Text GenerationCount;
-    [SerializeField]
-    private UINeuralNetworkPanel NeuralNetPanel;
     #endregion
 
     #region Constructors
-    void Awake()
-    {
-
-    }
     #endregion
 
     #region Methods
@@ -59,13 +50,23 @@ public class UISimulationController : MonoBehaviour
             //Display controls
             if (Target.CurrentControlInputs != null)
             {
-                for (int i = 0; i < InputTexts.Length; i++)
+                for (int i = 0; i < InputTexts.Length && i < Target.CurrentControlInputs.Length; i++)
                     InputTexts[i].text = Target.CurrentControlInputs[i].ToString();
             }
 
-            //Display evaluation and generation count
-            Evaluation.text = Target.Agent.Genotype.Evaluation.ToString();
-            GenerationCount.text = EvolutionManager.Instance.GenerationCount.ToString();
+            var carAgent = Target.GetComponent<CarAgent>();
+            if (carAgent != null)
+            {
+                Evaluation.text = Target.CurrentCompletionReward.ToString("F3");
+                if (GenerationCount != null)
+                    GenerationCount.text = "ML-Agents";
+            }
+            else
+            {
+                Evaluation.text = "N/A";
+                if (GenerationCount != null)
+                    GenerationCount.text = "N/A";
+            }
         }
     }
 

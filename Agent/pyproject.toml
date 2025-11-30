@@ -1,0 +1,19 @@
+[project]
+name = "agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "mlagents",
+    "grpcio>=1.50.0",
+    "protobuf>=3.6,<3.21",
+    "numpy>=1.21.0",
+    "torch>=1.11.0",
+    "six",
+    "tensorboard",
+    "gymnasium[box2d]>=1.2.2",
+    "pygame>=2.6.1",
+    "swig>=4.4.0",
+    "optuna>=3.6.0",
+]

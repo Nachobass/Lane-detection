@@ -1,0 +1,633 @@
+{
+  "total_trials": 16,
+  "trials": [
+    {
+      "trial_number": 0,
+      "reward": -0.651273746532388,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00018272261776066238,
+        "gamma": 0.9980635718217884,
+        "gae_lambda": 0.9639196365086843,
+        "clip_range": 0.21973169683940733,
+        "batch_size": 512,
+        "n_steps": 2048,
+        "n_epochs": 3,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.026506405886809047,
+        "vf_coef": 0.5216968971838151,
+        "max_grad_norm": 0.5623782158161189
+      },
+      "params": {
+        "learning_rate": 0.00018272261776066238,
+        "gamma": 0.9980635718217884,
+        "gae_lambda": 0.9639196365086843,
+        "clip_range": 0.21973169683940733,
+        "batch_size": 512.0,
+        "n_steps": 2048.0,
+        "n_epochs": 3.0,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.026506405886809047,
+        "vf_coef": 0.5216968971838151,
+        "max_grad_norm": 0.5623782158161189
+      },
+      "model_path": "results/optuna_ppo/trials/trial_000.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_000_20251130_162941"
+    },
+    {
+      "trial_number": 13,
+      "reward": -1.0078660536557436,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.0002956084562616708,
+        "gamma": 0.9989104866550493,
+        "gae_lambda": 0.9444807613649706,
+        "clip_range": 0.16618256836136297,
+        "batch_size": 2048,
+        "n_steps": 4096,
+        "n_epochs": 4,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.05191285275246425,
+        "vf_coef": 0.6728776806690807,
+        "max_grad_norm": 0.4625209788636678
+      },
+      "params": {
+        "learning_rate": 0.0002956084562616708,
+        "gamma": 0.9989104866550493,
+        "gae_lambda": 0.9444807613649706,
+        "clip_range": 0.16618256836136297,
+        "batch_size": 2048.0,
+        "n_steps": 4096.0,
+        "n_epochs": 4.0,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.05191285275246425,
+        "vf_coef": 0.6728776806690807,
+        "max_grad_norm": 0.4625209788636678
+      },
+      "model_path": "results/optuna_ppo/trials/trial_013.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_013_20251130_172756"
+    },
+    {
+      "trial_number": 3,
+      "reward": -1.0205180482706055,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00026176655097040057,
+        "gamma": 0.9975156104654392,
+        "gae_lambda": 0.9253095501231152,
+        "clip_range": 0.13919657248382905,
+        "batch_size": 2048,
+        "n_steps": 4096,
+        "n_epochs": 5,
+        "hidden_sizes": [
+          256,
+          256,
+          128
+        ],
+        "ent_coef": 0.09881982429404657,
+        "vf_coef": 0.708897907718663,
+        "max_grad_norm": 0.3993578407670862
+      },
+      "params": {
+        "learning_rate": 0.00026176655097040057,
+        "gamma": 0.9975156104654392,
+        "gae_lambda": 0.9253095501231152,
+        "clip_range": 0.13919657248382905,
+        "batch_size": 2048.0,
+        "n_steps": 4096.0,
+        "n_epochs": 5.0,
+        "hidden_sizes": [
+          256,
+          256,
+          128
+        ],
+        "ent_coef": 0.09881982429404657,
+        "vf_coef": 0.708897907718663,
+        "max_grad_norm": 0.3993578407670862
+      },
+      "model_path": "results/optuna_ppo/trials/trial_003.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_003_20251130_164244"
+    },
+    {
+      "trial_number": 11,
+      "reward": -1.0625854375073687,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00026939015643551574,
+        "gamma": 0.9981238395005004,
+        "gae_lambda": 0.941286385477499,
+        "clip_range": 0.16217632221256184,
+        "batch_size": 2048,
+        "n_steps": 4096,
+        "n_epochs": 5,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.056634324909788675,
+        "vf_coef": 0.6804181108737389,
+        "max_grad_norm": 0.42040396875045505
+      },
+      "params": {
+        "learning_rate": 0.00026939015643551574,
+        "gamma": 0.9981238395005004,
+        "gae_lambda": 0.941286385477499,
+        "clip_range": 0.16217632221256184,
+        "batch_size": 2048.0,
+        "n_steps": 4096.0,
+        "n_epochs": 5.0,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.056634324909788675,
+        "vf_coef": 0.6804181108737389,
+        "max_grad_norm": 0.42040396875045505
+      },
+      "model_path": "results/optuna_ppo/trials/trial_011.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_011_20251130_171714"
+    },
+    {
+      "trial_number": 4,
+      "reward": -1.092845956934616,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00010089271157862034,
+        "gamma": 0.9954937671406419,
+        "gae_lambda": 0.962411440630857,
+        "clip_range": 0.24580143360819745,
+        "batch_size": 512,
+        "n_steps": 4096,
+        "n_epochs": 5,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.06738017242196918,
+        "vf_coef": 0.7548850970305306,
+        "max_grad_norm": 0.5361074625809746
+      },
+      "params": {
+        "learning_rate": 0.00010089271157862034,
+        "gamma": 0.9954937671406419,
+        "gae_lambda": 0.962411440630857,
+        "clip_range": 0.24580143360819745,
+        "batch_size": 512.0,
+        "n_steps": 4096.0,
+        "n_epochs": 5.0,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.06738017242196918,
+        "vf_coef": 0.7548850970305306,
+        "max_grad_norm": 0.5361074625809746
+      },
+      "model_path": "results/optuna_ppo/trials/trial_004.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_004_20251130_164812"
+    },
+    {
+      "trial_number": 5,
+      "reward": -1.1156377005856484,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00012122516686859985,
+        "gamma": 0.9935516509572369,
+        "gae_lambda": 0.9656471029170138,
+        "clip_range": 0.21225543951389925,
+        "batch_size": 512,
+        "n_steps": 2048,
+        "n_epochs": 3,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.03243630062339875,
+        "vf_coef": 0.564153169214252,
+        "max_grad_norm": 0.6777755692715244
+      },
+      "params": {
+        "learning_rate": 0.00012122516686859985,
+        "gamma": 0.9935516509572369,
+        "gae_lambda": 0.9656471029170138,
+        "clip_range": 0.21225543951389925,
+        "batch_size": 512.0,
+        "n_steps": 2048.0,
+        "n_epochs": 3.0,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.03243630062339875,
+        "vf_coef": 0.564153169214252,
+        "max_grad_norm": 0.6777755692715244
+      },
+      "model_path": "results/optuna_ppo/trials/trial_005.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_005_20251130_165349"
+    },
+    {
+      "trial_number": 12,
+      "reward": -1.370060828467831,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00022093731003599063,
+        "gamma": 0.993145146367248,
+        "gae_lambda": 0.9765402910210345,
+        "clip_range": 0.1067171769868944,
+        "batch_size": 2048,
+        "n_steps": 2048,
+        "n_epochs": 4,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.09994261947773961,
+        "vf_coef": 0.6782486267395197,
+        "max_grad_norm": 0.5954038992607805
+      },
+      "params": {
+        "learning_rate": 0.00022093731003599063,
+        "gamma": 0.993145146367248,
+        "gae_lambda": 0.9765402910210345,
+        "clip_range": 0.1067171769868944,
+        "batch_size": 2048.0,
+        "n_steps": 2048.0,
+        "n_epochs": 4.0,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.09994261947773961,
+        "vf_coef": 0.6782486267395197,
+        "max_grad_norm": 0.5954038992607805
+      },
+      "model_path": "results/optuna_ppo/trials/trial_012.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_012_20251130_172231"
+    },
+    {
+      "trial_number": 18,
+      "reward": -1.536850033630617,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00018947510164669273,
+        "gamma": 0.9952370894804771,
+        "gae_lambda": 0.9498284757944806,
+        "clip_range": 0.15562410561295942,
+        "batch_size": 2048,
+        "n_steps": 2048,
+        "n_epochs": 8,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.042290850946022314,
+        "vf_coef": 0.6169972835964,
+        "max_grad_norm": 0.7969213925248544
+      },
+      "params": {
+        "learning_rate": 0.00018947510164669273,
+        "gamma": 0.9952370894804771,
+        "gae_lambda": 0.9498284757944806,
+        "clip_range": 0.15562410561295942,
+        "batch_size": 2048.0,
+        "n_steps": 2048.0,
+        "n_epochs": 8.0,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.042290850946022314,
+        "vf_coef": 0.6169972835964,
+        "max_grad_norm": 0.7969213925248544
+      },
+      "model_path": "results/optuna_ppo/trials/trial_018.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_018_20251130_174632"
+    },
+    {
+      "trial_number": 17,
+      "reward": -1.6397982641356066,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.0004474307279358068,
+        "gamma": 0.9916695461461764,
+        "gae_lambda": 0.9337493351753579,
+        "clip_range": 0.17205364178172494,
+        "batch_size": 512,
+        "n_steps": 4096,
+        "n_epochs": 4,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.06169185297156746,
+        "vf_coef": 0.4762074883117078,
+        "max_grad_norm": 0.5712886602730183
+      },
+      "params": {
+        "learning_rate": 0.0004474307279358068,
+        "gamma": 0.9916695461461764,
+        "gae_lambda": 0.9337493351753579,
+        "clip_range": 0.17205364178172494,
+        "batch_size": 512.0,
+        "n_steps": 4096.0,
+        "n_epochs": 4.0,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.06169185297156746,
+        "vf_coef": 0.4762074883117078,
+        "max_grad_norm": 0.5712886602730183
+      },
+      "model_path": "results/optuna_ppo/trials/trial_017.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_017_20251130_174059"
+    },
+    {
+      "trial_number": 10,
+      "reward": -1.7898377454606815,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.0004577434034785652,
+        "gamma": 0.9906181670668919,
+        "gae_lambda": 0.9781722266472719,
+        "clip_range": 0.2864580683823575,
+        "batch_size": 1024,
+        "n_steps": 8192,
+        "n_epochs": 3,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.013431442501061356,
+        "vf_coef": 0.4049244678259751,
+        "max_grad_norm": 0.3142391455699857
+      },
+      "params": {
+        "learning_rate": 0.0004577434034785652,
+        "gamma": 0.9906181670668919,
+        "gae_lambda": 0.9781722266472719,
+        "clip_range": 0.2864580683823575,
+        "batch_size": 1024.0,
+        "n_steps": 8192.0,
+        "n_epochs": 3.0,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.013431442501061356,
+        "vf_coef": 0.4049244678259751,
+        "max_grad_norm": 0.3142391455699857
+      },
+      "model_path": "results/optuna_ppo/trials/trial_010.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_010_20251130_171153"
+    },
+    {
+      "trial_number": 19,
+      "reward": -1.9681557916570456,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00023719261215743195,
+        "gamma": 0.9876360046060582,
+        "gae_lambda": 0.9721071500104759,
+        "clip_range": 0.2607803162552302,
+        "batch_size": 1024,
+        "n_steps": 8192,
+        "n_epochs": 3,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.02236627605623913,
+        "vf_coef": 0.5329666251599204,
+        "max_grad_norm": 0.3367408704914211
+      },
+      "params": {
+        "learning_rate": 0.00023719261215743195,
+        "gamma": 0.9876360046060582,
+        "gae_lambda": 0.9721071500104759,
+        "clip_range": 0.2607803162552302,
+        "batch_size": 1024.0,
+        "n_steps": 8192.0,
+        "n_epochs": 3.0,
+        "hidden_sizes": [
+          128,
+          128
+        ],
+        "ent_coef": 0.02236627605623913,
+        "vf_coef": 0.5329666251599204,
+        "max_grad_norm": 0.3367408704914211
+      },
+      "model_path": "results/optuna_ppo/trials/trial_019.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_019_20251130_175200"
+    },
+    {
+      "trial_number": 1,
+      "reward": -2.1616558168781923,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00020040871876541588,
+        "gamma": 0.9855333536637628,
+        "gae_lambda": 0.9567111736833428,
+        "clip_range": 0.12789877213040837,
+        "batch_size": 2048,
+        "n_steps": 2048,
+        "n_epochs": 7,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.0953996983528,
+        "vf_coef": 0.7862528132298238,
+        "max_grad_norm": 0.7041986740582306
+      },
+      "params": {
+        "learning_rate": 0.00020040871876541588,
+        "gamma": 0.9855333536637628,
+        "gae_lambda": 0.9567111736833428,
+        "clip_range": 0.12789877213040837,
+        "batch_size": 2048.0,
+        "n_steps": 2048.0,
+        "n_epochs": 7.0,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.0953996983528,
+        "vf_coef": 0.7862528132298238,
+        "max_grad_norm": 0.7041986740582306
+      },
+      "model_path": "results/optuna_ppo/trials/trial_001.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_001_20251130_163403"
+    },
+    {
+      "trial_number": 2,
+      "reward": -2.8811355859739707,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00016327356954687938,
+        "gamma": 0.9818557701661212,
+        "gae_lambda": 0.9610539815907294,
+        "clip_range": 0.18803049874792027,
+        "batch_size": 1024,
+        "n_steps": 2048,
+        "n_epochs": 5,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.07976195410250032,
+        "vf_coef": 0.7757995766256757,
+        "max_grad_norm": 0.7474136752138244
+      },
+      "params": {
+        "learning_rate": 0.00016327356954687938,
+        "gamma": 0.9818557701661212,
+        "gae_lambda": 0.9610539815907294,
+        "clip_range": 0.18803049874792027,
+        "batch_size": 1024.0,
+        "n_steps": 2048.0,
+        "n_epochs": 5.0,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.07976195410250032,
+        "vf_coef": 0.7757995766256757,
+        "max_grad_norm": 0.7474136752138244
+      },
+      "model_path": "results/optuna_ppo/trials/trial_002.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_002_20251130_163808"
+    },
+    {
+      "trial_number": 16,
+      "reward": -2.8995255422545596,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00034071342233665363,
+        "gamma": 0.9874583566781578,
+        "gae_lambda": 0.9499570259672203,
+        "clip_range": 0.23074192316882874,
+        "batch_size": 2048,
+        "n_steps": 4096,
+        "n_epochs": 6,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.05193703961165702,
+        "vf_coef": 0.4172463569869167,
+        "max_grad_norm": 0.4960822839602814
+      },
+      "params": {
+        "learning_rate": 0.00034071342233665363,
+        "gamma": 0.9874583566781578,
+        "gae_lambda": 0.9499570259672203,
+        "clip_range": 0.23074192316882874,
+        "batch_size": 2048.0,
+        "n_steps": 4096.0,
+        "n_epochs": 6.0,
+        "hidden_sizes": [
+          256,
+          256
+        ],
+        "ent_coef": 0.05193703961165702,
+        "vf_coef": 0.4172463569869167,
+        "max_grad_norm": 0.4960822839602814
+      },
+      "model_path": "results/optuna_ppo/trials/trial_016.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_016_20251130_173525"
+    },
+    {
+      "trial_number": 6,
+      "reward": -2.9708275059470908,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.00014451837004705447,
+        "gamma": 0.9814626182867471,
+        "gae_lambda": 0.9373850871748262,
+        "clip_range": 0.1322442574508009,
+        "batch_size": 512,
+        "n_steps": 2048,
+        "n_epochs": 10,
+        "hidden_sizes": [
+          256,
+          256,
+          128
+        ],
+        "ent_coef": 0.01990467320749091,
+        "vf_coef": 0.4911740650167767,
+        "max_grad_norm": 0.5135538943131281
+      },
+      "params": {
+        "learning_rate": 0.00014451837004705447,
+        "gamma": 0.9814626182867471,
+        "gae_lambda": 0.9373850871748262,
+        "clip_range": 0.1322442574508009,
+        "batch_size": 512.0,
+        "n_steps": 2048.0,
+        "n_epochs": 10.0,
+        "hidden_sizes": [
+          256,
+          256,
+          128
+        ],
+        "ent_coef": 0.01990467320749091,
+        "vf_coef": 0.4911740650167767,
+        "max_grad_norm": 0.5135538943131281
+      },
+      "model_path": "results/optuna_ppo/trials/trial_006.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_006_20251130_165911"
+    },
+    {
+      "trial_number": 9,
+      "reward": -2.998500179219991,
+      "state": "COMPLETE",
+      "config": {
+        "learning_rate": 0.0002772159821008165,
+        "gamma": 0.9901797189974204,
+        "gae_lambda": 0.9254173862032645,
+        "clip_range": 0.26706049911784757,
+        "batch_size": 512,
+        "n_steps": 4096,
+        "n_epochs": 7,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.04480618116704837,
+        "vf_coef": 0.7746919954946938,
+        "max_grad_norm": 0.3687604720729966
+      },
+      "params": {
+        "learning_rate": 0.0002772159821008165,
+        "gamma": 0.9901797189974204,
+        "gae_lambda": 0.9254173862032645,
+        "clip_range": 0.26706049911784757,
+        "batch_size": 512.0,
+        "n_steps": 4096.0,
+        "n_epochs": 7.0,
+        "hidden_sizes": [
+          512,
+          256
+        ],
+        "ent_coef": 0.04480618116704837,
+        "vf_coef": 0.7746919954946938,
+        "max_grad_norm": 0.3687604720729966
+      },
+      "model_path": "results/optuna_ppo/trials/trial_009.pt",
+      "log_dir": "results/optuna_ppo/tensorboard/trial_009_20251130_170611"
+    }
+  ]
+}

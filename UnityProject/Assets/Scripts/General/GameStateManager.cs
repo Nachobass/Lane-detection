@@ -58,7 +58,6 @@ public class GameStateManager : MonoBehaviour
     void Start ()
     {
         TrackManager.Instance.BestCarChanged += OnBestCarChanged;
-        EvolutionManager.Instance.StartEvolution();
 	}
     #endregion
 

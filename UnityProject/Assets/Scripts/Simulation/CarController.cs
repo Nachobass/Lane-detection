@@ -25,19 +25,14 @@ public class CarController : MonoBehaviour
     private const float MAX_CHECKPOINT_DELAY = 7;
 
     /// <summary>
-    /// The underlying AI agent of this car.
+    /// Current completion reward (tracked by TrackManager for ML-Agents).
     /// </summary>
-    public Agent Agent
+    public float CurrentCompletionReward
     {
         get;
         set;
     }
 
-    public float CurrentCompletionReward
-    {
-        get { return Agent.Genotype.Evaluation; }
-        set { Agent.Genotype.Evaluation = value; }
-    }
 
     /// <summary>
     /// Whether this car is controllable by user input (keyboard).
@@ -45,10 +40,9 @@ public class CarController : MonoBehaviour
     public bool UseUserInput = false;
 
     /// <summary>
-    /// Whether this car's controls are provided by an external controller (e.g., TCP bridge).
-    /// When true, this component will not fetch actions from the internal Agent.
+    /// The ML-Agents CarAgent component.
     /// </summary>
-    public bool UseExternalControl = false;
+    private CarAgent carAgent;
 
     /// <summary>
     /// The movement component of this car.
@@ -87,14 +81,16 @@ public class CarController : MonoBehaviour
         Movement = GetComponent<CarMovement>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
         sensors = GetComponentsInChildren<Sensor>();
+        
+        // Check if using ML-Agents
+        carAgent = GetComponent<CarAgent>();
     }
     void Start()
     {
         Movement.HitWall += Die;
 
         //Set name to be unique
-        this.name = "Car (" + idGenerator + ")";
-        idGenerator++;
+        this.name = "Car (" + NextID + ")";
     }
     #endregion
 
@@ -110,7 +106,7 @@ public class CarController : MonoBehaviour
         foreach (Sensor s in sensors)
             s.Show();
 
-        Agent.Reset();                                                                       // este reset falla
+        // ML-Agents handles episode reset in OnEpisodeBegin
         this.enabled = true;
     }
 
@@ -123,18 +119,8 @@ public class CarController : MonoBehaviour
     // Unity method for physics update
     void FixedUpdate()
     {
-        //Get control inputs from Agent
-        if (!UseUserInput && !UseExternalControl)
-        {
-            //Get readings from sensors
-            double[] sensorOutput = new double[sensors.Length];
-            for (int i = 0; i < sensors.Length; i++)
-                sensorOutput[i] = sensors[i].Output;
-
-            double[] controlInputs = Agent.FNN.ProcessInputs(sensorOutput);
-            Movement.SetInputs(controlInputs);
-        }
-
+        // ML-Agents handles control in CarAgent.OnActionReceived
+        // Just check for timeout
         if (timeSinceLastCheckpoint > MAX_CHECKPOINT_DELAY)
         {
             Die();
@@ -145,33 +131,36 @@ public class CarController : MonoBehaviour
     private void Die()
     {
         this.enabled = false;
-        if (Movement != null)
-        {
-            Movement.Stop();
-            Movement.enabled = false;
-        }
+        Movement.Stop();
+        Movement.enabled = false;
 
-        if (sensors != null)
-        {
-            foreach (Sensor s in sensors)
-            {
-                if (s != null)
-                {
-                    s.Hide();
-                }
-            }
-        }
+        foreach (Sensor s in sensors)
+            s.Hide();
 
-        // Only call Agent.Kill() if Agent exists (may be null when using external control)
-        if (Agent != null)
+        // ML-Agents will handle episode end
+        if (carAgent != null)
         {
-            Agent.Kill();
+            carAgent.OnWallHit();
         }
     }
 
     public void CheckpointCaptured()
     {
         timeSinceLastCheckpoint = 0;
+        
+        // Notify ML-Agents agent
+        if (carAgent != null)
+        {
+            carAgent.OnCheckpointCaptured();
+        }
+    }
+
+    public void FinishLap()
+    {
+        if (carAgent != null)
+        {
+            carAgent.OnTrackCompleted();
+        }
     }
     #endregion
 }
